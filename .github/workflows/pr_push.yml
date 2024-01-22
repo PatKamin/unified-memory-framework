@@ -77,7 +77,7 @@ jobs:
     Spellcheck:
         uses: ./.github/workflows/spellcheck.yml
     Build:
-        needs: [Spellcheck, FastBuild, CodeStyle]
+        needs: [Spellcheck, CodeStyle]
         uses: ./.github/workflows/basic.yml
     Benchmark:
         needs: [Build]
