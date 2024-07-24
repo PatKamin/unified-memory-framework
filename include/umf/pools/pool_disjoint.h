@@ -58,6 +58,9 @@ typedef struct umf_disjoint_pool_params_t {
 
     /// Name used in traces
     const char *Name;
+
+    /// Whether the pool is limited to host memory
+    int HostMemory;
 } umf_disjoint_pool_params_t;
 
 umf_memory_pool_ops_t *umfDisjointPoolOps(void);
@@ -72,7 +75,8 @@ static inline umf_disjoint_pool_params_t umfDisjointPoolParamsDefault(void) {
         0,                                         /* CurPoolSize */
         0,                                         /* PoolTrace */
         NULL,                                      /* SharedLimits */
-        "disjoint_pool"                            /* Name */
+        "disjoint_pool",                           /* Name */
+        0,                                         /* HostMemory */
     };
 
     return params;

@@ -394,13 +394,16 @@ class DisjointPool::AllocImpl {
 };
 
 static void *memoryProviderAlloc(umf_memory_provider_handle_t hProvider,
-                                 size_t size, size_t alignment = 0) {
+                                 bool hostMemory, size_t size,
+                                 size_t alignment = 0) {
     void *ptr;
     auto ret = umfMemoryProviderAlloc(hProvider, size, alignment, &ptr);
     if (ret != UMF_RESULT_SUCCESS) {
         throw MemoryProviderError{ret};
     }
-    utils_annotate_memory_inaccessible(ptr, size);
+    if (hostMemory) {
+        utils_annotate_memory_inaccessible(ptr, size);
+    }
     return ptr;
 }
 
@@ -438,7 +441,8 @@ Slab::Slab(Bucket &Bkt)
       Chunks(Bkt.SlabMinSize() / Bkt.getSize()), NumAllocated{0},
       bucket(Bkt), SlabListIter{}, FirstFreeChunkIdx{0} {
     auto SlabSize = Bkt.SlabAllocSize();
-    MemPtr = memoryProviderAlloc(Bkt.getMemHandle(), SlabSize);
+    MemPtr = memoryProviderAlloc(
+        Bkt.getMemHandle(), Bkt.getAllocCtx().getParams().HostMemory, SlabSize);
     regSlab(*this);
 }
 
@@ -821,8 +825,10 @@ void *DisjointPool::AllocImpl::allocate(size_t Size, bool &FromPool) try {
 
     FromPool = false;
     if (Size > getParams().MaxPoolableSize) {
-        Ptr = memoryProviderAlloc(getMemHandle(), Size);
-        utils_annotate_memory_undefined(Ptr, Size);
+        Ptr = memoryProviderAlloc(getMemHandle(), getParams().HostMemory, Size);
+        if (getParams().HostMemory) {
+            utils_annotate_memory_undefined(Ptr, Size);
+        }
         return Ptr;
     }
 
@@ -839,7 +845,9 @@ void *DisjointPool::AllocImpl::allocate(size_t Size, bool &FromPool) try {
     }
 
     VALGRIND_DO_MEMPOOL_ALLOC(this, Ptr, Size);
-    utils_annotate_memory_undefined(Ptr, Bucket.getSize());
+    if (getParams().HostMemory) {
+        utils_annotate_memory_undefined(Ptr, Bucket.getSize());
+    }
 
     return Ptr;
 } catch (MemoryProviderError &e) {
@@ -876,8 +884,11 @@ void *DisjointPool::AllocImpl::allocate(size_t Size, size_t Alignment,
     // If not, just request aligned pointer from the system.
     FromPool = false;
     if (AlignedSize > getParams().MaxPoolableSize) {
-        Ptr = memoryProviderAlloc(getMemHandle(), Size, Alignment);
-        utils_annotate_memory_undefined(Ptr, Size);
+        Ptr = memoryProviderAlloc(getMemHandle(), getParams().HostMemory, Size,
+                                  Alignment);
+        if (getParams().HostMemory) {
+            utils_annotate_memory_undefined(Ptr, Size);
+        }
         return Ptr;
     }
 
@@ -894,8 +905,9 @@ void *DisjointPool::AllocImpl::allocate(size_t Size, size_t Alignment,
     }
 
     VALGRIND_DO_MEMPOOL_ALLOC(this, AlignPtrUp(Ptr, Alignment), Size);
-    utils_annotate_memory_undefined(AlignPtrUp(Ptr, Alignment), Size);
-
+    if (getParams().HostMemory) {
+        utils_annotate_memory_undefined(AlignPtrUp(Ptr, Alignment), Size);
+    }
     return AlignPtrUp(Ptr, Alignment);
 } catch (MemoryProviderError &e) {
     umf::getPoolLastStatusRef<DisjointPool>() = e.code;
@@ -962,8 +974,9 @@ void DisjointPool::AllocImpl::deallocate(void *Ptr, bool &ToPool) {
             }
 
             VALGRIND_DO_MEMPOOL_FREE(this, Ptr);
-            utils_annotate_memory_inaccessible(Ptr, Bucket.getSize());
-
+            if (getParams().HostMemory) {
+                utils_annotate_memory_inaccessible(Ptr, Bucket.getSize());
+            }
             if (Bucket.getSize() <= Bucket.ChunkCutOff()) {
                 Bucket.freeChunk(Ptr, Slab, ToPool);
             } else {
