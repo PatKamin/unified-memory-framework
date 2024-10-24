@@ -532,7 +532,7 @@ void Slab::regSlabByAddr(void *Addr, Slab &Slab) {
     auto &Lock = Slab.getBucket().getAllocCtx().getKnownSlabsMapLock();
     auto &Map = Slab.getBucket().getAllocCtx().getKnownSlabs();
 
-    std::lock_guard<std::shared_timed_mutex> Lg(Lock);
+    std::unique_lock<std::shared_timed_mutex> Lg(Lock);
     Map.insert({Addr, Slab});
 }
 
@@ -540,7 +540,7 @@ void Slab::unregSlabByAddr(void *Addr, Slab &Slab) {
     auto &Lock = Slab.getBucket().getAllocCtx().getKnownSlabsMapLock();
     auto &Map = Slab.getBucket().getAllocCtx().getKnownSlabs();
 
-    std::lock_guard<std::shared_timed_mutex> Lg(Lock);
+    std::unique_lock<std::shared_timed_mutex> Lg(Lock);
 
     auto Slabs = Map.equal_range(Addr);
     // At least the must get the current slab from the map.
