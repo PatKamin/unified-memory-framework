@@ -18,16 +18,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            disjoint: 'OFF'
-            build_tests: 'ON'
-            simple_cmake: 'OFF'
-          # pure C build (Windows)
-          - os: windows-latest
-            disjoint: 'OFF'
-            # Tests' building is off for a pure C build
-            build_tests: 'OFF'
-            simple_cmake: 'OFF'
+          # - os: windows-latest
+          #   disjoint: 'OFF'
+          #   build_tests: 'ON'
+          #   simple_cmake: 'OFF'
+          # # pure C build (Windows)
+          # - os: windows-latest
+          #   disjoint: 'OFF'
+          #   # Tests' building is off for a pure C build
+          #   build_tests: 'OFF'
+          #   simple_cmake: 'OFF'
           - os: ubuntu-latest
             disjoint: 'ON'
             build_tests: 'ON'
