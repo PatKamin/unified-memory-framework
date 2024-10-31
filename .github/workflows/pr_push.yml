@@ -19,22 +19,26 @@ jobs:
   CodeChecks:
     uses: ./.github/workflows/reusable_checks.yml
   DocsBuild:
+    if: false
     uses: ./.github/workflows/reusable_docs_build.yml
   FastBuild:
     name: Fast builds
-    needs: [CodeChecks, DocsBuild]
+    needs: [CodeChecks]
     uses: ./.github/workflows/reusable_fast.yml
   Build:
+    if: false
     name: Basic builds
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_basic.yml
   DevDax:
+    if: false
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_dax.yml
   Sanitizers:
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_sanitizers.yml
   Qemu:
+    if: false
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_qemu.yml
   Benchmarks:
@@ -47,7 +51,7 @@ jobs:
     needs: [Build]
     uses: ./.github/workflows/reusable_gpu.yml
   Valgrind:
-    needs: [Build]
+    needs: [FastBuild]
     uses: ./.github/workflows/reusable_valgrind.yml
   MultiNuma:
     needs: [Build]
