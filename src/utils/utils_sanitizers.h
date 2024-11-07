@@ -111,8 +111,14 @@
 
 #if UMF_VG_HELGRIND_ENABLED
 #define VALGRIND_HG_DO_DISABLE_CHECKING VALGRIND_HG_DISABLE_CHECKING
+#define VALGRIND_HG_DO_ENABLE_CHECKING VALGRIND_HG_ENABLE_CHECKING
 #else
 #define VALGRIND_HG_DO_DISABLE_CHECKING(ptr, size)                             \
+    do {                                                                       \
+        (void)(ptr);                                                           \
+        (void)(size);                                                          \
+    } while (0)
+#define VALGRIND_HG_DO_ENABLE_CHECKING(ptr, size)                              \
     do {                                                                       \
         (void)(ptr);                                                           \
         (void)(size);                                                          \
