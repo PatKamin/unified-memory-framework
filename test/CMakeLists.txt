@@ -167,6 +167,10 @@ if(UMF_BUILD_LIBUMF_POOL_DISJOINT)
         NAME disjointCoarseMallocPool
         SRCS disjointCoarseMallocPool.cpp
         LIBS disjoint_pool)
+    add_umf_test(
+        NAME poolMaxSizeTest
+        SRCS poolMaxSizeTest.cpp malloc_compliance_tests.cpp
+        LIBS disjoint_pool)
 endif()
 
 if(UMF_BUILD_LIBUMF_POOL_DISJOINT
