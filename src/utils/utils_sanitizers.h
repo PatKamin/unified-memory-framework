@@ -109,6 +109,16 @@
     } while (0)
 #endif
 
+#if UMF_VG_HELGRIND_ENABLED
+#define VALGRIND_HG_DO_DISABLE_CHECKING VALGRIND_HG_DISABLE_CHECKING
+#else
+#define VALGRIND_HG_DO_DISABLE_CHECKING(ptr, size)                             \
+    do {                                                                       \
+        (void)(ptr);                                                           \
+        (void)(size);                                                          \
+    } while (0)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
