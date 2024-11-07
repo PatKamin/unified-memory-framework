@@ -143,7 +143,9 @@ TEST_P(umfPoolTest, allocFree) {
 }
 
 TEST_P(umfPoolTest, allocMaxSize) {
-    auto *ptr = umfPoolMalloc(pool.get(), SIZE_MAX);
+    void *ptr = nullptr;
+    VALGRIND_HG_DRD_DISABLE_CHECKING(ptr, sizeof(ptr));
+    ptr = umfPoolMalloc(pool.get(), SIZE_MAX);
     ASSERT_EQ(ptr, nullptr);
 }
 
