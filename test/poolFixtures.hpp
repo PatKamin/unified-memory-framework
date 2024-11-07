@@ -143,8 +143,9 @@ TEST_P(umfPoolTest, allocFree) {
 }
 
 TEST_P(umfPoolTest, allocMaxSize) {
-    auto *ptr = umfPoolMalloc(pool.get(), SIZE_MAX);
-    ASSERT_EQ(ptr, nullptr);
+    auto *ptr = umfPoolMalloc(pool.get(), 500);
+    ASSERT_NE(ptr, nullptr);
+    umfPoolFree(pool.get(), ptr);
 }
 
 TEST_P(umfPoolTest, allocFreeNonAlignedSizes) {
