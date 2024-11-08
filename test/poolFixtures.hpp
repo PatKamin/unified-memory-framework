@@ -142,11 +142,6 @@ TEST_P(umfPoolTest, allocFree) {
     umfPoolFree(pool.get(), ptr);
 }
 
-TEST_P(umfPoolTest, allocMaxSize) {
-    auto *ptr = umfPoolMalloc(pool.get(), SIZE_MAX);
-    ASSERT_EQ(ptr, nullptr);
-}
-
 TEST_P(umfPoolTest, allocFreeNonAlignedSizes) {
     for (const auto &allocSize : nonAlignedAllocSizes) {
         auto *ptr = umfPoolMalloc(pool.get(), allocSize);
@@ -455,5 +450,10 @@ TEST_P(umfPoolTest, realloc_compliance) {
 }
 
 TEST_P(umfPoolTest, free_compliance) { free_compliance_test(pool.get()); }
+
+TEST_P(umfPoolTest, allocMaxSize) {
+    auto *ptr = umfPoolMalloc(pool.get(), SIZE_MAX);
+    ASSERT_EQ(ptr, nullptr);
+}
 
 #endif /* UMF_TEST_POOL_FIXTURES_HPP */
