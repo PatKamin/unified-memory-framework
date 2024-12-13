@@ -163,7 +163,7 @@ target_compile_definitions(umf PRIVATE ${UMF_COMMON_COMPILE_DEFINITIONS})
 add_dependencies(umf coarse)
 
 if(UMF_LINK_HWLOC_STATICALLY)
-    add_dependencies(umf ${UMF_HWLOC_NAME})
+    add_dependencies(umf hwloc_targ)
 endif()
 
 if(NOT WINDOWS AND UMF_POOL_JEMALLOC_ENABLED)
