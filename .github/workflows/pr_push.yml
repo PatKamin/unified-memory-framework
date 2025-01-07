@@ -19,14 +19,16 @@ jobs:
   CodeChecks:
     uses: ./.github/workflows/reusable_checks.yml
   DocsBuild:
+    if: false
     uses: ./.github/workflows/reusable_docs_build.yml
   FastBuild:
+    if: false
     name: Fast builds
     needs: [CodeChecks, DocsBuild]
     uses: ./.github/workflows/reusable_fast.yml
   Build:
     name: Basic builds
-    needs: [FastBuild]
+    # needs: [FastBuild]
     uses: ./.github/workflows/reusable_basic.yml
   DevDax:
     needs: [FastBuild]

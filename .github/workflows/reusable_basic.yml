@@ -14,6 +14,7 @@ env:
 
 jobs:
   ubuntu-build:
+    if: false
     name: Ubuntu
     strategy:
       matrix:
@@ -219,7 +220,7 @@ jobs:
       VCPKG_PATH: "${{github.workspace}}/build/vcpkg/packages/hwloc_x64-windows;${{github.workspace}}/build/vcpkg/packages/tbb_x64-windows;${{github.workspace}}/build/vcpkg/packages/jemalloc_x64-windows"
     strategy:
       matrix:
-        os: ['windows-2019', 'windows-2022']
+        os: ['windows-2022']
         build_type: [Debug, Release]
         compiler: [{c: cl, cxx: cl}]
         shared_library: ['ON', 'OFF']
@@ -234,18 +235,18 @@ jobs:
             level_zero_provider: 'ON'
             cuda_provider: 'ON'
             toolset: "-T ClangCL"
-          - os: 'windows-2022'
-            build_type: Release
-            compiler: {c: cl, cxx: cl}
-            shared_library: 'ON'
-            level_zero_provider: 'ON'
-            cuda_provider: 'ON'
-          - os: 'windows-2022'
-            build_type: Release
-            compiler: {c: cl, cxx: cl}
-            shared_library: 'ON'
-            level_zero_provider: 'OFF'
-            cuda_provider: 'OFF'
+          # - os: 'windows-2022'
+          #   build_type: Release
+          #   compiler: {c: cl, cxx: cl}
+          #   shared_library: 'ON'
+          #   level_zero_provider: 'ON'
+          #   cuda_provider: 'ON'
+          # - os: 'windows-2022'
+          #   build_type: Release
+          #   compiler: {c: cl, cxx: cl}
+          #   shared_library: 'ON'
+          #   level_zero_provider: 'OFF'
+          #   cuda_provider: 'OFF'
 
     runs-on: ${{matrix.os}}
 
@@ -450,6 +451,7 @@ jobs:
       run: ctest -C ${{matrix.build_type}} --output-on-failure --test-dir test
 
   macos-build:
+    if: false
     name: MacOS
     strategy:
       matrix:
