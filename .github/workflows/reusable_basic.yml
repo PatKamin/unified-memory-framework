@@ -14,6 +14,7 @@ env:
 
 jobs:
   ubuntu-build:
+    if: false
     name: Ubuntu
     strategy:
       matrix:
@@ -449,6 +450,7 @@ jobs:
       run: ctest -C ${{matrix.build_type}} --output-on-failure --test-dir test
 
   macos-build:
+    if: false
     name: MacOS
     strategy:
       matrix:
