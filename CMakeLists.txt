@@ -263,8 +263,13 @@ else()
 
         set(LIBHWLOC_INCLUDE_DIRS
             ${hwloc_targ_SOURCE_DIR}/include;${hwloc_targ_BINARY_DIR}/include)
-        set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/$<CONFIG>)
-        set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/$<CONFIG>/hwloc.lib)
+        if(CMAKE_GENERATOR STREQUAL "Ninja")
+            set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/lib)
+            set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib)
+        else()
+            set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/$<CONFIG>)
+            set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/$<CONFIG>/hwloc.lib)
+        endif()
     else()
         include(FetchContent)
         message(
