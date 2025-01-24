@@ -261,6 +261,28 @@ else()
             SOURCE_SUBDIR contrib/windows-cmake/ FIND_PACKAGE_ARGS)
         FetchContent_MakeAvailable(hwloc_targ)
 
+        if(CMAKE_GENERATOR STREQUAL "Ninja")
+            add_custom_command(
+                COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${hwloc_targ_BINARY_DIR} -B build
+                WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
+                OUTPUT ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/CMakeCache.txt)
+            add_custom_command(
+                COMMAND ${CMAKE_COMMAND} --build build
+                WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
+                OUTPUT ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/build/lib/hwloc.lib
+                DEPENDS ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/CMakeCache.txt)
+            add_custom_command(
+                COMMAND ${CMAKE_COMMAND} --build build --target INSTALL
+                WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
+                OUTPUT ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib
+                DEPENDS ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/build/lib/hwloc.lib)
+
+            add_custom_target(hwloc_prod
+                    DEPENDS ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib)
+            target_link_libraries(hwloc INTERFACE ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib)
+            add_dependencies(hwloc hwloc_prod)
+        endif()
+
         set(LIBHWLOC_INCLUDE_DIRS
             ${hwloc_targ_SOURCE_DIR}/include;${hwloc_targ_BINARY_DIR}/include)
         if(CMAKE_GENERATOR STREQUAL "Ninja")
