@@ -659,6 +659,7 @@ endif()
 # replace test_examples.sh with CMake script?)
 if(LINUX
    AND UMF_BUILD_SHARED_LIBRARY
+   AND UMF_BUILD_EXAMPLES
    AND NOT
        (UMF_USE_ASAN
         OR UMF_USE_UBSAN

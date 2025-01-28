@@ -257,125 +257,119 @@ else()
     if(NOT UMF_LINK_HWLOC_STATICALLY)
         pkg_check_modules(LIBHWLOC hwloc>=2.3.0)
         if(NOT LIBHWLOC_FOUND)
-            find_package(LIBHWLOC 2.3.0 REQUIRED hwloc)
+            find_package(LIBHWLOC 2.3.0 COMPONENTS hwloc)
+            if(LIBHWLOC_LIBRARIES)
+                set(LIBHWLOC_AVAILABLE TRUE)
+            endif()
         endif()
 
-        # add PATH to DLL on Windows
-        set(DLL_PATH_LIST
-            "${DLL_PATH_LIST};PATH=path_list_append:${LIBHWLOC_DLL_DIRS}")
-    elseif(WINDOWS)
-        include(FetchContent)
-        set(HWLOC_ENABLE_TESTING OFF)
-        set(HWLOC_SKIP_LSTOPO ON)
-        set(HWLOC_SKIP_TOOLS ON)
-
-        message(
-            STATUS
-                "Will fetch hwloc from ${UMF_HWLOC_REPO} (tag: ${UMF_HWLOC_TAG})"
-        )
-
-        FetchContent_Declare(
-            hwloc_targ
-            GIT_REPOSITORY ${UMF_HWLOC_REPO}
-            GIT_TAG ${UMF_HWLOC_TAG}
-            SOURCE_SUBDIR contrib/windows-cmake/ FIND_PACKAGE_ARGS)
-        FetchContent_MakeAvailable(hwloc_targ)
-
-        message(STATUS "hwloc CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
-
-        if(CMAKE_GENERATOR STREQUAL "Ninja")
-            add_custom_command(
-                COMMAND ${CMAKE_COMMAND}
-                        -DCMAKE_INSTALL_PREFIX=${hwloc_targ_BINARY_DIR} -B build
-                WORKING_DIRECTORY
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
-                OUTPUT
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/CMakeCache.txt
-            )
-            add_custom_command(
-                COMMAND ${CMAKE_COMMAND} --build build
-                WORKING_DIRECTORY
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
-                OUTPUT
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/build/lib/hwloc.lib
-                DEPENDS
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/CMakeCache.txt
-            )
-            add_custom_command(
-                COMMAND ${CMAKE_COMMAND} --build build --target INSTALL
-                WORKING_DIRECTORY
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
-                OUTPUT ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib
-                DEPENDS
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/build/lib/hwloc.lib
-            )
-            add_custom_target(hwloc_prod
-                              DEPENDS ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib)
-            target_link_libraries(
-                hwloc INTERFACE ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib)
-            add_dependencies(hwloc hwloc_prod)
-
-            set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/lib)
-            set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/lib/hwloc.lib)
-        elseif(CMAKE_GENERATOR STREQUAL "NMake Makefiles")
-            set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/)
-            set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/hwloc.lib)
+        if(LIBHWLOC_AVAILABLE OR LIBHWLOC_FOUND)
+            # add PATH to DLL on Windows
+            set(DLL_PATH_LIST
+                "${DLL_PATH_LIST};PATH=path_list_append:${LIBHWLOC_DLL_DIRS}")
+            message(STATUS "    LIBHWLOC_LIBRARIES = ${LIBHWLOC_LIBRARIES}")
         else()
-            set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/$<CONFIG>)
-            set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/$<CONFIG>/hwloc.lib)
+            set(UMF_LINK_HWLOC_STATICALLY ON)
         endif()
+    endif()
 
-        set(LIBHWLOC_INCLUDE_DIRS
-            ${hwloc_targ_SOURCE_DIR}/include;${hwloc_targ_BINARY_DIR}/include)
-    else()
+    if(UMF_LINK_HWLOC_STATICALLY)
         include(FetchContent)
         message(
             STATUS
                 "Will fetch hwloc from ${UMF_HWLOC_REPO} (tag: ${UMF_HWLOC_TAG})"
         )
-
         FetchContent_Declare(
             hwloc_targ
             GIT_REPOSITORY ${UMF_HWLOC_REPO}
             GIT_TAG ${UMF_HWLOC_TAG})
         FetchContent_MakeAvailable(hwloc_targ)
 
-        add_custom_command(
-            COMMAND ./autogen.sh
-            WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
-            OUTPUT ${hwloc_targ_SOURCE_DIR}/configure)
-        add_custom_command(
-            COMMAND
-                ./configure --prefix=${hwloc_targ_BINARY_DIR}
-                --enable-static=yes --enable-shared=no --disable-libxml2
-                --disable-pci --disable-levelzero --disable-opencl
-                --disable-cuda --disable-nvml --disable-libudev --disable-rsmi
-                CFLAGS=-fPIC CXXFLAGS=-fPIC
-            WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
-            OUTPUT ${hwloc_targ_SOURCE_DIR}/Makefile
-            DEPENDS ${hwloc_targ_SOURCE_DIR}/configure)
-        add_custom_command(
-            COMMAND make
-            WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
-            OUTPUT ${hwloc_targ_SOURCE_DIR}/lib/libhwloc.la
-            DEPENDS ${hwloc_targ_SOURCE_DIR}/Makefile)
-        add_custom_command(
-            COMMAND make install
-            WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
-            OUTPUT ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a
-            DEPENDS ${hwloc_targ_SOURCE_DIR}/lib/libhwloc.la)
+        if(WINDOWS)
+            set(HWLOC_ENABLE_TESTING OFF)
+            set(HWLOC_SKIP_LSTOPO ON)
+            set(HWLOC_SKIP_TOOLS ON)
 
-        add_custom_target(hwloc_prod
-                          DEPENDS ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a)
-        add_library(hwloc INTERFACE)
-        target_link_libraries(hwloc
-                              INTERFACE ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a)
-        add_dependencies(hwloc hwloc_prod)
+            message(STATUS "hwloc CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
 
-        set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/lib)
-        set(LIBHWLOC_INCLUDE_DIRS ${hwloc_targ_BINARY_DIR}/include)
-        set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a)
-    endif()
+            add_custom_target(
+                hwloc_config
+                COMMAND ${CMAKE_COMMAND}
+                        -DCMAKE_INSTALL_PREFIX=${hwloc_targ_BINARY_DIR} -B build
+                WORKING_DIRECTORY
+                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
+                DEPENDS
+                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/CMakeLists.txt
+            )
+            add_custom_target(
+                hwloc_build
+                COMMAND ${CMAKE_COMMAND} --build build --config Release
+                WORKING_DIRECTORY
+                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/)
+            add_dependencies(hwloc_build hwloc_config)
+
+            set(HWLOC_LIB_PATH "")
+            if(CMAKE_GENERATOR STREQUAL "NMake Makefiles")
+                set(HWLOC_LIB_PATH "${hwloc_targ_BINARY_DIR}/hwloc.lib")
+            else()
+                set(HWLOC_LIB_PATH "${hwloc_targ_BINARY_DIR}/lib/hwloc.lib")
+            endif()
+
+            add_custom_target(
+                hwloc_prod
+                COMMAND ${CMAKE_COMMAND} --build build --config Release --target
+                        INSTALL
+                WORKING_DIRECTORY
+                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/)
+            add_dependencies(hwloc_prod hwloc_build)
+
+            add_library(hwloc INTERFACE)
+            target_link_libraries(hwloc INTERFACE ${HWLOC_LIB_PATH})
+            add_dependencies(hwloc hwloc_prod)
+
+            get_filename_component(LIBHWLOC_LIBRARY_DIRS ${HWLOC_LIB_PATH} DIRECTORY)
+            set(LIBHWLOC_LIBRARIES ${HWLOC_LIB_PATH})
+            set(LIBHWLOC_INCLUDE_DIRS
+                ${hwloc_targ_BINARY_DIR}/include
+            )
+        else() # not Windows
+            add_custom_command(
+                COMMAND ./autogen.sh
+                WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
+                OUTPUT ${hwloc_targ_SOURCE_DIR}/configure)
+            add_custom_command(
+                COMMAND
+                    ./configure --prefix=${hwloc_targ_BINARY_DIR}
+                    --enable-static=yes --enable-shared=no --disable-libxml2
+                    --disable-pci --disable-levelzero --disable-opencl
+                    --disable-cuda --disable-nvml --disable-libudev
+                    --disable-rsmi CFLAGS=-fPIC CXXFLAGS=-fPIC
+                WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
+                OUTPUT ${hwloc_targ_SOURCE_DIR}/Makefile
+                DEPENDS ${hwloc_targ_SOURCE_DIR}/configure)
+            add_custom_command(
+                COMMAND make
+                WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
+                OUTPUT ${hwloc_targ_SOURCE_DIR}/lib/libhwloc.la
+                DEPENDS ${hwloc_targ_SOURCE_DIR}/Makefile)
+            add_custom_command(
+                COMMAND make install
+                WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
+                OUTPUT ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a
+                DEPENDS ${hwloc_targ_SOURCE_DIR}/lib/libhwloc.la)
+
+            add_custom_target(hwloc_prod
+                              DEPENDS ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a)
+            add_library(hwloc INTERFACE)
+            target_link_libraries(
+                hwloc INTERFACE ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a)
+            add_dependencies(hwloc hwloc_prod)
+
+            set(LIBHWLOC_LIBRARY_DIRS ${hwloc_targ_BINARY_DIR}/lib)
+            set(LIBHWLOC_INCLUDE_DIRS ${hwloc_targ_BINARY_DIR}/include)
+            set(LIBHWLOC_LIBRARIES ${hwloc_targ_BINARY_DIR}/lib/libhwloc.a)
+        endif()
+    endif() # UMF_LINK_HWLOC_STATICALLY
 
     message(STATUS "    LIBHWLOC_LIBRARIES = ${LIBHWLOC_LIBRARIES}")
     message(STATUS "    LIBHWLOC_INCLUDE_DIRS = ${LIBHWLOC_INCLUDE_DIRS}")
@@ -386,10 +380,25 @@ else()
     endif()
 endif()
 
-if(hwloc_targ_SOURCE_DIR)
-    # apply security patch for HWLOC
+if(hwloc_targ_SOURCE_DIR) # hwloc has been fetched
+    # Determine the base directory for the hwloc patch
+    if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/fix_coverity_issues.patch")
+        # macro called for the main project
+        set(COVERITY_PATCH_PATH
+            "${CMAKE_SOURCE_DIR}/cmake/fix_coverity_issues.patch")
+    elseif(EXISTS
+           "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/fix_coverity_issues.patch")
+        # macro called for one of the examples
+        set(COVERITY_PATCH_PATH
+            "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/fix_coverity_issues.patch")
+    else()
+        message(FATAL_ERROR "Coverity fix patch not found.")
+    endif()
+    message(STATUS "COVERITY_PATCH_PATH = ${COVERITY_PATCH_PATH}")
+
+    # Apply security patch for HWLOC
     execute_process(
-        COMMAND git apply ${PROJECT_SOURCE_DIR}/cmake/fix_coverity_issues.patch
+        COMMAND git apply ${COVERITY_PATCH_PATH}
         WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
         OUTPUT_VARIABLE UMF_HWLOC_PATCH_OUTPUT
         ERROR_VARIABLE UMF_HWLOC_PATCH_ERROR)
