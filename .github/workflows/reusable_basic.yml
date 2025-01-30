@@ -26,6 +26,7 @@ jobs:
         install_tbb: ['ON']
         disable_hwloc: ['OFF']
         link_hwloc_statically: ['OFF']
+        install_hwloc: ['ON']
         include:
           - os: 'ubuntu-20.04'
             build_type: Release
@@ -36,6 +37,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'ON'
           - os: 'ubuntu-22.04'
             build_type: Release
             compiler: {c: clang, cxx: clang++}
@@ -45,6 +47,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'ON'
           - os: 'ubuntu-22.04'
             build_type: Release
             compiler: {c: gcc, cxx: g++}
@@ -54,6 +57,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'ON'
           - os: 'ubuntu-24.04'
             build_type: Debug
             compiler: {c: gcc, cxx: g++}
@@ -63,6 +67,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'ON'
           # test level_zero_provider='OFF' and cuda_provider='OFF'
           - os: 'ubuntu-22.04'
             build_type: Release
@@ -73,6 +78,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'ON'
           # test icx compiler
           - os: 'ubuntu-22.04'
             build_type: Release
@@ -83,6 +89,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'ON'
           # test without installing TBB
           - os: 'ubuntu-22.04'
             build_type: Release
@@ -93,6 +100,7 @@ jobs:
             install_tbb: 'OFF'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'ON'
           - os: 'ubuntu-22.04'
             build_type: Debug
             compiler: {c: gcc, cxx: g++}
@@ -102,6 +110,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'ON'
             link_hwloc_statically: 'OFF'
+            install_hwloc: 'OFF'
           - os: 'ubuntu-22.04'
             build_type: Release
             compiler: {c: gcc, cxx: g++}
@@ -111,6 +120,7 @@ jobs:
             install_tbb: 'ON'
             disable_hwloc: 'OFF'
             link_hwloc_statically: 'ON'
+            install_hwloc: 'OFF'
     runs-on: ${{matrix.os}}
 
     steps:
@@ -143,6 +153,7 @@ jobs:
       run: sudo apt-get install -y ${{matrix.compiler.cxx}}
 
     - name: Install libhwloc
+      if: matrix.install_hwloc == 'ON'
       run: .github/scripts/install_hwloc.sh
 
     - name: Get UMF version
