@@ -218,6 +218,7 @@ jobs:
     name: Windows
     env:
       VCPKG_PATH: "${{github.workspace}}/build/vcpkg/packages/hwloc_x64-windows;${{github.workspace}}/build/vcpkg/packages/tbb_x64-windows;${{github.workspace}}/build/vcpkg/packages/jemalloc_x64-windows"
+      # LLVMToolsVersion: "19.1.0"
     strategy:
       matrix:
         os: ['windows-2022']
@@ -229,11 +230,11 @@ jobs:
         include:
           - os: 'windows-2022'
             build_type: Release
-            compiler: {c: clang-cl, cxx: clang-cl}
+            compiler: {c: '"C:\Program Files\LLVM\bin\clang-cl.exe"', cxx: '"C:\Program Files\LLVM\bin\clang-cl.exe"'}
             shared_library: 'ON'
             level_zero_provider: 'ON'
             cuda_provider: 'ON'
-            toolset: "-T ClangCL"
+            toolset: "-T ClangCL,host=x64"
           # - os: 'windows-2022'
           #   build_type: Release
           #   compiler: {c: cl, cxx: cl}
@@ -273,6 +274,8 @@ jobs:
       shell: pwsh
 
     - name: Configure build
+      env:
+        LLVMInstallDir: 'C:\Program Files\LLVM'
       run: >
         cmake
         -B ${{env.BUILD_DIR}}
@@ -291,6 +294,8 @@ jobs:
         -DUMF_TESTS_FAIL_ON_SKIP=ON
 
     - name: Build UMF
+      env:
+        LLVMInstallDir: 'C:\Program Files\LLVM'
       run: cmake --build ${{env.BUILD_DIR}} --config ${{matrix.build_type}} -j $Env:NUMBER_OF_PROCESSORS
 
     - name: Run tests
