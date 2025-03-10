@@ -3,10 +3,11 @@
 name: PR/push
 
 on:
-  push:
-    branches-ignore:
-      - 'dependabot/**'
-  pull_request:
+  workflow_call:
+  # push:
+  #   branches-ignore:
+  #     - 'dependabot/**'
+  # pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
