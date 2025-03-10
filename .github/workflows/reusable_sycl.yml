@@ -1,0 +1,148 @@
+name: SYCL
+
+on:
+  workflow_call:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  latest-release:
+    if: false
+    name: Latest release
+    # runs-on: [DSS-LEVEL_ZERO, DSS-UBUNTU]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install apt packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libhwloc-dev ninja-build python3 wget
+
+    # Install UMF
+    - name: Checkout UMF
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        path: umf_repo
+        fetch-depth: 0
+
+    - name: Configure UMF
+      working-directory: umf_repo
+      run: >
+        cmake
+        -B build
+        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/umf_install
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_COMPILER=gcc
+        -DCMAKE_CXX_COMPILER=g++
+        -DUMF_BUILD_SHARED_LIBRARY=ON
+        -DUMF_BUILD_TESTS=OFF
+        -DUMF_BUILD_EXAMPLES=OFF
+
+    - name: Build and install UMF
+      working-directory: umf_repo
+      run: cmake --build build --target install -j$(nproc)
+
+    # Build SYCL
+    - name: Download latest SYCL release
+      run: |
+        latest_release=$(curl -s https://api.github.com/repos/intel/llvm/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+        download_url="https://github.com/intel/llvm/archive/refs/tags/${latest_release}.tar.gz"
+        wget --no-verbose $download_url -O sycl_linux.tar.gz
+
+    - name: Extract SYCL
+      run: |
+        mkdir llvm
+        tar -xzf sycl_linux.tar.gz -C llvm --strip-components=1
+
+    - name: Build SYCL
+      working-directory: llvm
+      run: |
+        python3 buildbot/configure.py
+        python3 buildbot/compile.py -j $(nproc)
+
+    - name: Copy latest UMF to sycl
+      run: echo "Copy latest UMF to sycl"
+
+    - name: Run sycl-ls
+      run: echo "Run sycl-ls"
+
+  latest-daily:
+    name: Latest daily build
+    # runs-on: [DSS-LEVEL_ZERO, DSS-UBUNTU]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install apt packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libhwloc-dev ninja-build python3 wget
+
+    # Install SYCL
+    - name: Download latest SYCL daily release
+      run: |
+        latest_tag=$(curl -s https://api.github.com/repos/intel/llvm/releases | awk -F'"' '/"tag_name":/ {print $4; exit}')
+        download_url="https://github.com/intel/llvm/releases/download/${latest_tag}/sycl_linux.tar.gz"
+        wget --no-verbose $download_url -O sycl_linux.tar.gz
+
+    - name: Extract SYCL
+      run: |
+        mkdir llvm
+        tar -xzf sycl_linux.tar.gz -C llvm --strip-components=1
+
+    # Install UMF
+    - name: Checkout UMF
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        path: umf_repo
+        fetch-depth: 0
+
+    - name: Configure UMF
+      working-directory: umf_repo
+      run: >
+        cmake
+        -B build
+        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/llvm
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_COMPILER=gcc
+        -DCMAKE_CXX_COMPILER=g++
+        -DUMF_BUILD_SHARED_LIBRARY=ON
+        -DUMF_BUILD_TESTS=OFF
+        -DUMF_BUILD_EXAMPLES=OFF
+
+    - name: Remove UMF installed with SYCL
+      run: rm -f llvm/lib/libumf*
+
+    - name: Build and install UMF
+      working-directory: umf_repo
+      run: cmake --build build --target install -j$(nproc)
+
+    - name: Print installed lib files
+      run: ls -l llvm/lib
+
+    # Add sycl to PATH and LD_LIBRARY_PATH
+    - name: Add sycl to PATH and LD_LIBRARY_PATH
+      run: |
+        echo "export PATH=${{ github.workspace }}/llvm/bin:$PATH" >> $GITHUB_ENV
+        echo "export LD_LIBRARY_PATH=${{ github.workspace }}/llvm/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+    # Test sycl-ls
+    - name: Run sycl-ls
+      run: |
+        ./llvm/bin/sycl-ls
+
+    # Test several sycl e2e test
+    - name: Checkout SYCL
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        repository: intel/llvm
+        path: sycl_repo
+        fetch-depth: 1
+        ref: sycl
+
+    - name: Run SYCL tests
+      working-directory: sycl_repo
+      run: |
+        llvm-lit --param sycl_devices="opencl:cpu" sycl/test-e2e
