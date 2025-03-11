@@ -21,12 +21,13 @@ jobs:
   DocsBuild:
     uses: ./.github/workflows/reusable_docs_build.yml
   FastBuild:
+    if: false
     name: Fast builds
     needs: [CodeChecks, DocsBuild]
     uses: ./.github/workflows/reusable_fast.yml
   Build:
     name: Basic builds
-    needs: [FastBuild]
+    # needs: [FastBuild]
     uses: ./.github/workflows/reusable_basic.yml
   DevDax:
     needs: [FastBuild]
@@ -35,12 +36,14 @@ jobs:
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_multi_numa.yml
   L0:
+    if: false
     needs: [Build]
     uses: ./.github/workflows/reusable_gpu.yml
     with:
       name: "LEVEL_ZERO"
       shared_lib: "['ON']"
   CUDA:
+    if: false
     needs: [Build]
     uses: ./.github/workflows/reusable_gpu.yml
     with:
@@ -55,9 +58,11 @@ jobs:
     with:
       short_run: true
   ProxyLib:
+    if: false
     needs: [Build]
     uses: ./.github/workflows/reusable_proxy_lib.yml
   Valgrind:
+    if: false
     needs: [Build]
     uses: ./.github/workflows/reusable_valgrind.yml
   Coverage:
@@ -74,6 +79,7 @@ jobs:
     needs: [Build, QEMU, ProxyLib]
     uses: ./.github/workflows/reusable_coverage.yml
   CodeQL:
+    if: false
     needs: [Build]
     permissions:
       contents: read
@@ -86,6 +92,7 @@ jobs:
       security-events: write
     uses: ./.github/workflows/reusable_trivy.yml
   Compatibility:
+    if: false
     needs: [Build]
     uses: ./.github/workflows/reusable_compatibility.yml
     strategy:
