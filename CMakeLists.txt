@@ -279,34 +279,18 @@ else()
             STATUS
                 "Will fetch hwloc from ${UMF_HWLOC_REPO} (tag: ${UMF_HWLOC_TAG})"
         )
-        FetchContent_Declare(
-            hwloc_targ
-            GIT_REPOSITORY ${UMF_HWLOC_REPO}
-            GIT_TAG ${UMF_HWLOC_TAG})
-        FetchContent_MakeAvailable(hwloc_targ)
 
         if(WINDOWS)
             set(HWLOC_ENABLE_TESTING OFF)
             set(HWLOC_SKIP_LSTOPO ON)
             set(HWLOC_SKIP_TOOLS ON)
 
-            message(STATUS "hwloc CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
-
-            add_custom_target(
-                hwloc_config
-                COMMAND ${CMAKE_COMMAND}
-                        -DCMAKE_INSTALL_PREFIX=${hwloc_targ_BINARY_DIR} -B build
-                WORKING_DIRECTORY
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/
-                DEPENDS
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/CMakeLists.txt
-            )
-            add_custom_target(
-                hwloc_build
-                COMMAND ${CMAKE_COMMAND} --build build --config Release
-                WORKING_DIRECTORY
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/)
-            add_dependencies(hwloc_build hwloc_config)
+            FetchContent_Declare(
+                hwloc_targ
+                GIT_REPOSITORY ${UMF_HWLOC_REPO}
+                GIT_TAG ${UMF_HWLOC_TAG}
+                SOURCE_SUBDIR contrib/windows-cmake/)
+            FetchContent_MakeAvailable(hwloc_targ)
 
             set(HWLOC_LIB_PATH "")
             if(CMAKE_GENERATOR STREQUAL "NMake Makefiles")
@@ -315,24 +299,17 @@ else()
                 set(HWLOC_LIB_PATH "${hwloc_targ_BINARY_DIR}/lib/hwloc.lib")
             endif()
 
-            add_custom_target(
-                hwloc_prod
-                COMMAND ${CMAKE_COMMAND} --build build --config Release --target
-                        INSTALL
-                WORKING_DIRECTORY
-                    ${hwloc_targ_SOURCE_DIR}/contrib/windows-cmake/)
-            add_dependencies(hwloc_prod hwloc_build)
-
-            add_library(hwloc INTERFACE)
-            target_link_libraries(hwloc INTERFACE ${HWLOC_LIB_PATH})
-            add_dependencies(hwloc hwloc_prod)
-
-            get_filename_component(LIBHWLOC_LIBRARY_DIRS ${HWLOC_LIB_PATH} DIRECTORY)
+            get_filename_component(LIBHWLOC_LIBRARY_DIRS ${HWLOC_LIB_PATH}
+                                   DIRECTORY)
             set(LIBHWLOC_LIBRARIES ${HWLOC_LIB_PATH})
-            set(LIBHWLOC_INCLUDE_DIRS
-                ${hwloc_targ_BINARY_DIR}/include
-            )
+            set(LIBHWLOC_INCLUDE_DIRS ${hwloc_targ_BINARY_DIR}/include)
         else() # not Windows
+            FetchContent_Declare(
+                hwloc_targ
+                GIT_REPOSITORY ${UMF_HWLOC_REPO}
+                GIT_TAG ${UMF_HWLOC_TAG})
+            FetchContent_MakeAvailable(hwloc_targ)
+
             add_custom_command(
                 COMMAND ./autogen.sh
                 WORKING_DIRECTORY ${hwloc_targ_SOURCE_DIR}
