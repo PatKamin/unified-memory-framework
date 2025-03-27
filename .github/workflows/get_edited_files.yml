@@ -1,0 +1,27 @@
+name: Get Edited Files
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  GetEditedFiles:
+    runs-on: ubuntu-latest
+    outputs:
+      edited_files: ${{ steps.get_files.outputs.files }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get list of edited files
+        id: get_files
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          git diff --name-only origin/${{ github.base_ref }} > edited_files.txt
+          echo "::set-output name=files::$(cat edited_files.txt | tr '\n' ',')"
+
+      - name: Save edited files as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: edited-files
+          path: edited_files.txt

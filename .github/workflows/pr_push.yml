@@ -18,7 +18,12 @@ permissions:
 jobs:
   CodeChecks:
     uses: ./.github/workflows/reusable_checks.yml
+  GetEditedFiles:
+    uses: ./.github/workflows/get_edited_files.yml
   DocsBuild:
+    runs-on: ubuntu-latest
+    needs: [GetEditedFiles]
+    if: ${{ (needs.GetEditedFiles.outputs.edited_files != '') && (contains(needs.GetEditedFiles.outputs.edited_files, 'include/') || contains(needs.GetEditedFiles.outputs.edited_files, 'docs/')) }}
     uses: ./.github/workflows/reusable_docs_build.yml
   FastBuild:
     name: Fast builds
