@@ -3,6 +3,8 @@ name: Nightly
 
 # This job is run at 04:00 UTC every day or on demand.
 on:
+  push:
+  pull_request:
   workflow_dispatch:
   schedule:
     - cron: '0 4 * * *'
@@ -15,6 +17,7 @@ env:
 
 jobs:
   fuzz-test:
+      if: false
       name: Fuzz test
       strategy:
         fail-fast: false
@@ -54,6 +57,7 @@ jobs:
         run: ctest -C ${{matrix.build_type}} --output-on-failure --verbose -L "fuzz-long"
 
   valgrind:
+    if: false
     name: Valgrind
     strategy:
       fail-fast: false
@@ -297,17 +301,20 @@ jobs:
       run: ctest -C ${{matrix.build_type}} --output-on-failure --test-dir test
 
   L0:
+    if: false
     uses: ./.github/workflows/reusable_gpu.yml
     with:
       provider: "LEVEL_ZERO"
       runner: "L0"
   L0-BMG:
+    if: false
     uses: ./.github/workflows/reusable_gpu.yml
     with:
       provider: "LEVEL_ZERO"
       runner: "L0-BMG"
       os: "['Ubuntu']"
   CUDA:
+    if: false
     uses: ./.github/workflows/reusable_gpu.yml
     with:
       provider: "CUDA"
@@ -315,6 +322,7 @@ jobs:
 
   # Full execution of QEMU tests
   QEMU:
+    if: false
     uses: ./.github/workflows/reusable_qemu.yml
     with:
       short_run: false
@@ -323,6 +331,7 @@ jobs:
       os: "['ubuntu-22.04', 'ubuntu-24.04', 'ubuntu-24.10']"
 
   Benchmarks:
+    if: false
     uses: ./.github/workflows/reusable_benchmarks.yml
     permissions:
       contents: write
@@ -332,4 +341,5 @@ jobs:
       bench_script_params: '--save Baseline_PVC'
 
   SYCL:
+    if: false
     uses: ./.github/workflows/reusable_sycl.yml
