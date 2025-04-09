@@ -98,7 +98,7 @@ jobs:
     # https://github.com/actions/runner-images/issues/8891
     - name: Setup MSVC dev command prompt
       if: matrix.sanitizers.asan == 'ON'
-      uses: TheMrMilchmann/setup-msvc-dev@48edcef51a12c80d7e62ace57aae1417795e511c # v3.0.0
+      uses: TheMrMilchmann/setup-msvc-dev@fb19abb8a41b3cf0340f5d1be17d420309232be6 # v3.0.1
       with:
         arch: x64
         toolset: '14'
