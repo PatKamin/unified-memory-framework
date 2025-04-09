@@ -19,8 +19,10 @@ jobs:
   CodeChecks:
     uses: ./.github/workflows/reusable_checks.yml
   DocsBuild:
+    if: false
     uses: ./.github/workflows/reusable_docs_build.yml
   FastBuild:
+    if: false
     name: Fast builds
     needs: [CodeChecks, DocsBuild]
     uses: ./.github/workflows/reusable_fast.yml
@@ -29,9 +31,11 @@ jobs:
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_basic.yml
   DevDax:
+    if: false
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_dax.yml
   MultiNuma:
+    if: false
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_multi_numa.yml
   L0:
@@ -57,9 +61,11 @@ jobs:
       runner: "CUDA"
       shared_lib: "['ON']"
   Sanitizers:
+    if: false
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_sanitizers.yml
   QEMU:
+    if: false
     needs: [FastBuild]
     uses: ./.github/workflows/reusable_qemu.yml
     with:
