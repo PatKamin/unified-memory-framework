@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # v0.30.0
         with:
           scan-type: 'config'
           hide-progress: false
